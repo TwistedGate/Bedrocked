@@ -1,0 +1,8 @@
+# Blocks
+tile.bedrocked.bedrockbreaker.name=Bedrock Breaker
+
+# Items
+item.bedrocked.maybe.name=Maybe
+
+# Category
+itemGroup.bedrocked=Bedrocked

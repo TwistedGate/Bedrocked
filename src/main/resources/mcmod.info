@@ -1,0 +1,11 @@
+[{
+  "modid": "bedrocked",
+  "name": "Bedrocked",
+  "description": "A simple machine able to break the hardest material known to mankind.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "authorList": ["TwistedGate"],
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}]

@@ -1,0 +1,12 @@
+{
+	"parent":"block/cube",
+	"textures":{
+		"particle":"bedrocked:blocks/bedrockbreaker_top",
+		"up":"bedrocked:blocks/bedrockbreaker_top",
+		"down":"bedrocked:blocks/bedrockbreaker_top",
+		"north":"bedrocked:blocks/bedrockbreaker_front",
+		"east":"bedrocked:blocks/bedrockbreaker_side",
+		"south":"bedrocked:blocks/bedrockbreaker_side",
+		"west":"bedrocked:blocks/bedrockbreaker_side"
+	}
+}
