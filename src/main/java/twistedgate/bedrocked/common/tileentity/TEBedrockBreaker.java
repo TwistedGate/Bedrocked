@@ -17,7 +17,7 @@ import twistedgate.bedrocked.common.blocks.BlockBedrockBreaker;
 import twistedgate.bedrocked.energy.CEnergyStorage;
 
 public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISidedInventory{
-	public static final int REQUIRED_MIN_ENERGY=512;
+	public static final int REQUIRED_MIN_ENERGY=1024;
 	public static final int REQUIRED_HITS=5120;
 	
 	public int minHeight=1;
@@ -33,9 +33,18 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		super(new CEnergyStorage(REQUIRED_HITS*REQUIRED_MIN_ENERGY));
 	}
 	
+	public void softReset(){
+		this.noBedrock=false;
+		this.workedPos=null;
+		markDirty();
+	}
+	
 	@Override
 	public void update(){
 		if(this.world.isRemote) return;
+		
+		// Avoids unessesarly wasting processing time, after no bedrock has been detected.
+		// Downside is one has to re-place the machine if there was a bedrock block placed in the area.
 		if(this.noBedrock) return;
 		
 		for(EnumFacing side:EnumFacing.values()){
@@ -51,14 +60,26 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		boolean dirty=false;
 		
 		if(this.workedPos==null){
-			findBedrock();
+			BlockPos tmp;
+			if((tmp=findBedrock(this.radius, this.minHeight, this.maxHeight))==null){
+				this.noBedrock=true;
+				BlockBedrockBreaker.updateState(this.world, this.pos, false);
+			}else{
+				this.workedPos=tmp;
+			}
+			
 			dirty=true;
 		}else{
 			boolean canRun=this.energyStorage.getEnergyStored()>=REQUIRED_MIN_ENERGY;
 			
 			if(canRun){
-				if(this.energyStorage.extractEnergy(REQUIRED_MIN_ENERGY, false)==REQUIRED_MIN_ENERGY){
-					this.hits++;
+				if(this.energyStorage.getEnergyStored()>=REQUIRED_MIN_ENERGY){
+					int i=16; // To limit the hits for a single tick.
+					while(this.energyStorage.getEnergyStored()>=REQUIRED_MIN_ENERGY && i>0 && this.hits<REQUIRED_HITS){
+						this.energyStorage.extractEnergy(REQUIRED_MIN_ENERGY, false);
+						this.hits++;
+						i--;
+					}
 					dirty=true;
 				}
 				
@@ -68,7 +89,7 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 						this.hits=0;
 						dirty=true;
 						
-						if(Math.random()<=0.01D)
+						if(Math.random()<=0.015D)
 							this.world.spawnEntity(new EntityItem(this.world, this.pos.getX()+0.5, this.pos.getY()+0.5, this.pos.getZ()+0.5, new ItemStack(Blocks.BEDROCK,1,0)));
 					}
 				}
@@ -82,34 +103,28 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		}
 	}
 	
-	private void findBedrock(){
-		int rad=this.radius;
-		int a=this.minHeight;
-		int b=this.maxHeight;
-		
-		for(int y=a;y<=b;y++){
-			for(int z=-rad;z<=rad;z++){
-				for(int x=-rad;x<=rad;x++){
-					BlockPos pos=this.pos.offset(EnumFacing.NORTH, x)
+	/** Tries to find bedrock */
+	private BlockPos findBedrock(int radius, int minY, int maxY){
+		for(int y=minY;y<=maxY;y++){
+			for(int z=-radius;z<=radius;z++){
+				for(int x=-radius;x<=radius;x++){
+					BlockPos pos=this.pos.offset(EnumFacing.DOWN, y)
 										 .offset(EnumFacing.EAST, z)
-										 .offset(EnumFacing.DOWN, y);
+										 .offset(EnumFacing.NORTH, x);
 					
 					if(pos.getY()==0){
-						this.noBedrock=true;
-						return;
+						return null;
 					}
 					
 					IBlockState state=this.world.getBlockState(pos);
 					if(state!=null && state.getBlock()==Blocks.BEDROCK){
-						this.workedPos=pos;
-						this.noBedrock=false;
-						return;
+						return pos;
 					}
 				}
 			}
 		}
 		
-		this.noBedrock=true;
+		return null;
 	}
 	
 	@Override
@@ -202,6 +217,15 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		}
 	}
 	
+	/**
+	 * 0 - radius<br>
+	 * 1 - min height<br>
+	 * 2 - max height<br>
+	 * 3 - energy stored<br>
+	 * 4 - energy capactity<br>
+	 * 5 - bedrock hits<br>
+	 * 6 - bedrock found (1 or 0, true or false)
+	 */
 	@Override
 	public int getField(int id){
 		switch(id){
@@ -216,6 +240,15 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		}
 	}
 	
+	/**
+	 * 0 - radius<br>
+	 * 1 - min height<br>
+	 * 2 - max height<br>
+	 * 3 - energy stored <b>(Not used here)</b><br>
+	 * 4 - energy capactity <b>(Not used here)</b><br>
+	 * 5 - bedrock hits<br>
+	 * 6 - bedrock found (1 or 0, true or false)
+	 */
 	@Override
 	public void setField(int id, int value){
 		switch(id){

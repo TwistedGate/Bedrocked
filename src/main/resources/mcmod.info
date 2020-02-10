@@ -1,11 +1,10 @@
 [{
-  "modid": "bedrocked",
-  "name": "Bedrocked",
-  "description": "A simple machine able to break the hardest material known to mankind.",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
-  "authorList": ["TwistedGate"],
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": []
+	"name": "Bedrocked",
+	"modid": "bedrocked",
+	"description": "A simple machine able to break the hardest material known to mankind.",
+	"version": "${version}",
+	"mcversion": "${mcversion}",
+	"url": "https://github.com/TwistedGate/Bedrocked",
+	"authorList": ["TwistedGate"],
+	"logoFile": "assets/bedrocked/bedrocked-logo.png"
 }]

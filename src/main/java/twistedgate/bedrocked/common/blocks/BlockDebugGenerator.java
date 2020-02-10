@@ -11,6 +11,8 @@ import twistedgate.bedrocked.common.tileentity.TEDebugGenerator;
 public class BlockDebugGenerator extends BRBlockBase implements ITileEntityProvider{
 	public BlockDebugGenerator(){
 		super(Material.IRON, "debuggenerator");
+		setHardness(3.0F);
+		setResistance(5.0F);
 		
 		BRStuff.ITEMS.add(new ItemBlock(this).setRegistryName(this.getRegistryName()));
 	}

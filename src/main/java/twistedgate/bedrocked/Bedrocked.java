@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import twistedgate.bedrocked.common.CommonProxy;
 import twistedgate.bedrocked.common.tileentity.TEBedrockBreaker;
 import twistedgate.bedrocked.common.tileentity.TEDebugGenerator;
+import twistedgate.bedrocked.network.NetworkHandler;
 
 @Mod(
 	modid=BRInfo.ID,
@@ -52,6 +53,7 @@ public class Bedrocked{
 		proxy.preInitStart(event);
 		
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new BRGuiHandler());
+		NetworkHandler.init();
 		
 		regTE(TEBedrockBreaker.class, "breaker");
 		regTE(TEDebugGenerator.class, "debuggenerator");
