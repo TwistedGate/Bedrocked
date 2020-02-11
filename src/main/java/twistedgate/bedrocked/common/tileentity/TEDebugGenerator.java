@@ -23,7 +23,7 @@ public class TEDebugGenerator extends TEMachineBase implements ITickable{
 			if(state!=null && state.getBlock() instanceof BRBlockBase){
 				TEMachineBase machine=(TEMachineBase) this.world.getTileEntity(pos);
 				
-				machine.energyStorage.receiveEnergy(2048, false);
+				machine.energyStorage.receiveEnergy(5120, false);
 				machine.markDirty();
 			}
 		}

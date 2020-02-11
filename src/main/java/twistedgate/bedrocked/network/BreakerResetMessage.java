@@ -19,10 +19,6 @@ public class BreakerResetMessage implements IMessage{
 		this.pos=tileEntity.getPos();
 	}
 	
-	public BlockPos getPos(){
-		return this.pos.toImmutable();
-	}
-	
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.pos.getX());
@@ -44,7 +40,7 @@ public class BreakerResetMessage implements IMessage{
 		public IMessage onMessage(BreakerResetMessage message, MessageContext ctx){
 			if(ctx.side==Side.SERVER){
 				WorldServer world=ctx.getServerHandler().player.getServerWorld();
-				BlockPos pos=message.getPos();
+				BlockPos pos=message.pos;
 				
 				if(world.isBlockLoaded(pos)){
 					TileEntity te=world.getTileEntity(pos);

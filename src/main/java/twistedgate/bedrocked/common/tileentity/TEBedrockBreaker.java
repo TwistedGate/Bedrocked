@@ -1,5 +1,6 @@
 package twistedgate.bedrocked.common.tileentity;
 
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -9,22 +10,27 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 import twistedgate.bedrocked.common.blocks.BlockBedrockBreaker;
 import twistedgate.bedrocked.energy.CEnergyStorage;
 
 public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISidedInventory{
-	public static final int REQUIRED_MIN_ENERGY=1024;
-	public static final int REQUIRED_HITS=5120;
+	public static final int REQUIRED_MIN_ENERGY=1024; // Temporary, will be a configurable.
+	public static final int REQUIRED_HITS=5120; // Temporary, will be a configurable.
 	
 	public int minHeight=1;
 	public int maxHeight=6;
-	public int radius=2;
+	public int radius=8;
 	public int hits=0;
-	public BlockPos workedPos=null;
+	
+	/** Location of the Block that is currently going to be broken. */
+	public BlockPos workingPos=null;
 	
 	/** If no bedrock was found the machine considers the area cleared and won't check for more. */
 	public boolean noBedrock=false;
@@ -35,7 +41,8 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 	
 	public void softReset(){
 		this.noBedrock=false;
-		this.workedPos=null;
+		this.workingPos=null;
+		this.hits=0;
 		markDirty();
 	}
 	
@@ -45,6 +52,7 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		
 		// Avoids unessesarly wasting processing time, after no bedrock has been detected.
 		// Downside is one has to re-place the machine if there was a bedrock block placed in the area.
+		// Or press the Soft-Reset Button.
 		if(this.noBedrock) return;
 		
 		for(EnumFacing side:EnumFacing.values()){
@@ -59,13 +67,13 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		
 		boolean dirty=false;
 		
-		if(this.workedPos==null){
+		if(this.workingPos==null){
 			BlockPos tmp;
 			if((tmp=findBedrock(this.radius, this.minHeight, this.maxHeight))==null){
 				this.noBedrock=true;
 				BlockBedrockBreaker.updateState(this.world, this.pos, false);
 			}else{
-				this.workedPos=tmp;
+				this.workingPos=tmp;
 			}
 			
 			dirty=true;
@@ -74,7 +82,7 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 			
 			if(canRun){
 				if(this.energyStorage.getEnergyStored()>=REQUIRED_MIN_ENERGY){
-					int i=16; // To limit the hits for a single tick.
+					int i=32; // To limit the hits for a single tick.
 					while(this.energyStorage.getEnergyStored()>=REQUIRED_MIN_ENERGY && i>0 && this.hits<REQUIRED_HITS){
 						this.energyStorage.extractEnergy(REQUIRED_MIN_ENERGY, false);
 						this.hits++;
@@ -84,13 +92,17 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 				}
 				
 				if(this.hits>=REQUIRED_HITS){
-					if(this.world.destroyBlock(this.workedPos, false)){
-						this.workedPos=null;
+					if(this.world.destroyBlock(this.workingPos, false)){
+						this.workingPos=null;
 						this.hits=0;
 						dirty=true;
 						
-						if(Math.random()<=0.015D)
-							this.world.spawnEntity(new EntityItem(this.world, this.pos.getX()+0.5, this.pos.getY()+0.5, this.pos.getZ()+0.5, new ItemStack(Blocks.BEDROCK,1,0)));
+						if(Math.random()<0.2D){
+							ItemStack bedrock=new ItemStack(Blocks.BEDROCK);
+							
+							if(!insertInInventory(bedrock))
+								this.world.spawnEntity(new EntityItem(this.world, this.pos.getX()+0.5, this.pos.getY()+1.5, this.pos.getZ()+0.5, bedrock));
+						}
 					}
 				}
 			}
@@ -103,14 +115,43 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		}
 	}
 	
-	/** Tries to find bedrock */
+	/** Tries to insert the given stack into a nearby inventory. Returns true if successful, false otherwise. */
+	private boolean insertInInventory(ItemStack stack){
+		for(EnumFacing side:EnumFacing.values()){ // Check every side (including up and down)
+			BlockPos pos=this.pos.offset(side);
+			IBlockState state=this.world.getBlockState(pos);
+			
+			if(state!=null && state.getBlock() instanceof ITileEntityProvider){ // Make sure it's a TileEntity
+				TileEntity te=this.world.getTileEntity(pos);
+				
+				IItemHandler handler=te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side.getOpposite());
+				if(handler!=null){
+					for(int i=0;i<handler.getSlots();i++){
+						if(handler.isItemValid(i, stack)){ // Making sure its a valid slot
+							ItemStack tmp;
+							
+							// Simulate insertion and check for equality
+							if((tmp=handler.insertItem(i, stack, true))!=null && tmp.getCount()!=stack.getCount()){
+								handler.insertItem(i, stack, false); // Actualy insert the bedrock this time
+								return true; // Get the hell out of this mess
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	/** Tries to find a bedrock block inside the given area. Returns null if no bedrock was found. */
 	private BlockPos findBedrock(int radius, int minY, int maxY){
-		for(int y=minY;y<=maxY;y++){
+		for(int y=maxY;y>=minY;y--){
 			for(int z=-radius;z<=radius;z++){
 				for(int x=-radius;x<=radius;x++){
-					BlockPos pos=this.pos.offset(EnumFacing.DOWN, y)
-										 .offset(EnumFacing.EAST, z)
-										 .offset(EnumFacing.NORTH, x);
+					BlockPos pos=new BlockPos(this.pos.getX(), y, this.pos.getZ())
+							.offset(EnumFacing.SOUTH, z)
+							.offset(EnumFacing.EAST, x);
 					
 					if(pos.getY()==0){
 						return null;
@@ -143,11 +184,11 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		compound.setShort("radius", (short)this.radius);
 		compound.setShort("hits", (short)this.hits);
 		compound.setBoolean("areadone", this.noBedrock);
-		if(this.workedPos!=null){
+		if(this.workingPos!=null){
 			NBTTagCompound coords=new NBTTagCompound();
-			coords.setInteger("x", this.workedPos.getX());
-			coords.setInteger("y", this.workedPos.getY());
-			coords.setInteger("z", this.workedPos.getZ());
+			coords.setInteger("x", this.workingPos.getX());
+			coords.setInteger("y", this.workingPos.getY());
+			coords.setInteger("z", this.workingPos.getZ());
 			compound.setTag("breaking", coords);
 		}
 		return compound;
@@ -167,7 +208,7 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 			int x=coords.getInteger("x");
 			int y=coords.getInteger("y");
 			int z=coords.getInteger("z");
-			this.workedPos=new BlockPos(x, y, z);
+			this.workingPos=new BlockPos(x, y, z);
 		}
 	}
 	
@@ -175,7 +216,7 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 	public SPacketUpdateTileEntity getUpdatePacket(){
 		NBTTagCompound tag=new NBTTagCompound();
 		this.writeToNBT(tag);
-		return new SPacketUpdateTileEntity(this.pos, 0, tag);
+		return new SPacketUpdateTileEntity(this.pos, 3, tag);
 	}
 	
 	@Override
@@ -192,20 +233,7 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 	
 	@Override
 	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt){
-		switch(pkt.getTileEntityType()){
-			case 0:{
-				readFromNBT(pkt.getNbtCompound());
-				return;
-			}
-			case 3:{
-				NBTTagCompound tag=pkt.getNbtCompound();
-				
-				setField(0, tag.getInteger("0"));
-				setField(1, tag.getInteger("1"));
-				setField(2, tag.getInteger("2"));
-				return;
-			}
-		}
+		readFromNBT(pkt.getNbtCompound());
 	}
 	
 	@Override

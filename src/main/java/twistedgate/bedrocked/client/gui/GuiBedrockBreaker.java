@@ -68,12 +68,11 @@ public class GuiBedrockBreaker extends GuiContainer{
 	
 	@Override
 	protected void actionPerformed(GuiButton button) throws IOException{
-		boolean changed=false;
 		int offset=(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT))?10:1;
 		switch(Button.fromId(button.id)){
 			case SOFT_RESET:{
 				NetworkHandler.sendToServer(new BreakerResetMessage(this.tileEntity));
-				break;
+				return;
 			}
 			case RAD_INC:{
 				int value=this.tileEntity.getField(0)+offset;
@@ -82,7 +81,7 @@ public class GuiBedrockBreaker extends GuiContainer{
 					value=16;
 				
 				this.tileEntity.setField(0, value);
-				changed=true;
+				NetworkHandler.sendToServer(new BreakerFieldUpdateMessage(this.tileEntity.getPos(), 0, value));
 				break;
 			}
 			case RAD_DEC:{
@@ -92,7 +91,7 @@ public class GuiBedrockBreaker extends GuiContainer{
 					value=1;
 				
 				this.tileEntity.setField(0, value);
-				changed=true;
+				NetworkHandler.sendToServer(new BreakerFieldUpdateMessage(this.tileEntity.getPos(), 0, value));
 				break;
 			}
 			case MIN_INC:{
@@ -102,7 +101,7 @@ public class GuiBedrockBreaker extends GuiContainer{
 					value=this.tileEntity.getField(2);
 				
 				this.tileEntity.setField(1, value);
-				changed=true;
+				NetworkHandler.sendToServer(new BreakerFieldUpdateMessage(this.tileEntity.getPos(), 1, value));
 				break;
 			}
 			case MIN_DEC:{
@@ -112,7 +111,7 @@ public class GuiBedrockBreaker extends GuiContainer{
 					value=1;
 				
 				this.tileEntity.setField(1, value);
-				changed=true;
+				NetworkHandler.sendToServer(new BreakerFieldUpdateMessage(this.tileEntity.getPos(), 1, value));
 				break;
 			}
 			case MAX_INC:{
@@ -122,7 +121,7 @@ public class GuiBedrockBreaker extends GuiContainer{
 					value=255;
 				
 				this.tileEntity.setField(2, value);
-				changed=true;
+				NetworkHandler.sendToServer(new BreakerFieldUpdateMessage(this.tileEntity.getPos(), 2, value));
 				break;
 			}
 			case MAX_DEC:{
@@ -132,13 +131,9 @@ public class GuiBedrockBreaker extends GuiContainer{
 					value=this.tileEntity.getField(1);
 				
 				this.tileEntity.setField(2, value);
-				changed=true;
+				NetworkHandler.sendToServer(new BreakerFieldUpdateMessage(this.tileEntity.getPos(), 2, value));
 				break;
 			}
-		}
-		
-		if(changed){
-			NetworkHandler.sendToServer(new BreakerFieldUpdateMessage(this.tileEntity));
 		}
 	}
 	
