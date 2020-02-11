@@ -40,8 +40,10 @@ public class BlockBedrockBreaker extends BRBlockBase implements ITileEntityProvi
 	
 	public BlockBedrockBreaker(){
 		super(Material.IRON, "bedrockbreaker");
-		setHardness(3.0F);
-		setResistance(5.0F);
+		setHardness(4.0F);
+		setResistance(7.0F);
+		setHarvestLevel("pickaxe", 2);
+		setCreativeTab(Bedrocked.creativeTab);
 		
 		setDefaultState(this.blockState.getBaseState()
 				.withProperty(FACING, EnumFacing.NORTH)
@@ -90,8 +92,9 @@ public class BlockBedrockBreaker extends BRBlockBase implements ITileEntityProvi
 	
 	@Override
 	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
-		if(!playerIn.isSneaking() && (playerIn.getHeldItemMainhand()!=null && playerIn.getHeldItemMainhand().getItem()!=BRStuff.linker)){
-			if(!worldIn.isRemote) playerIn.openGui(Bedrocked.instance, 0, worldIn, pos.getX(), pos.getY(), pos.getZ());
+		if(!playerIn.isSneaking()){
+			if(!worldIn.isRemote)
+				playerIn.openGui(Bedrocked.instance, 0, worldIn, pos.getX(), pos.getY(), pos.getZ());
 			return true;
 		}
 		return false;
@@ -186,8 +189,13 @@ public class BlockBedrockBreaker extends BRBlockBase implements ITileEntityProvi
 		}
 		
 		@Override
+		public String getItemStackDisplayName(ItemStack stack){
+			return "§b"+super.getItemStackDisplayName(stack);
+		}
+		
+		@Override
 		public String getHighlightTip(ItemStack item, String displayName) {
-			return "$d"+displayName;
+			return displayName;
 		};
 		
 		@SideOnly(Side.CLIENT)

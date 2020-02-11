@@ -30,7 +30,7 @@ public class BreakerFieldUpdateMessage implements IMessage{
 		buf.writeInt(this.pos.getZ());
 		
 		// Deflate into a 24-Bit int
-		buf.writeMedium((this.fieldId<<8) | this.fieldValue);
+		buf.writeBytes(new byte[]{this.fieldId, this.fieldValue});
 	}
 	
 	@Override
@@ -41,9 +41,8 @@ public class BreakerFieldUpdateMessage implements IMessage{
 		this.pos=new BlockPos(x,y,z);
 		
 		// Inflate from the 24-Bit int
-		int read=buf.readMedium();
-		this.fieldId	=(byte)((read>>8)&0xFF);
-		this.fieldValue	=(byte)(read&0xFF);
+		this.fieldId	=buf.readByte();
+		this.fieldValue	=buf.readByte();
 	}
 	
 	public static class Handler implements IMessageHandler<BreakerFieldUpdateMessage, IMessage>{
@@ -62,7 +61,10 @@ public class BreakerFieldUpdateMessage implements IMessage{
 						TEBedrockBreaker breaker=(TEBedrockBreaker)te;
 						
 						// Both id and value get casted to int then with bit-and pulled to 8-Bit, to avoid negative numbers.
-						breaker.setField(((int)message.fieldId)&0xFF, ((int)message.fieldValue)&0xFF);
+						int id=message.fieldId&0xFF;
+						int va=message.fieldValue&0xFF;
+						
+						breaker.setField(id, va);
 						
 						breaker.markDirty();
 						

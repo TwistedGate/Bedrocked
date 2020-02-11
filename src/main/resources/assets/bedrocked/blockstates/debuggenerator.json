@@ -1,0 +1,7 @@
+{
+	"variants":{
+		"inventory":{"model":"bedrocked:debuggen"},
+		
+		"normal":{"model":"bedrocked:debuggen"}
+	}
+}

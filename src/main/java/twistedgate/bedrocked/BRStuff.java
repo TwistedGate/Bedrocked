@@ -15,8 +15,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import twistedgate.bedrocked.common.blocks.BlockBedrockBreaker;
 import twistedgate.bedrocked.common.blocks.BlockDebugGenerator;
-import twistedgate.bedrocked.common.items.BRItemBase;
-import twistedgate.bedrocked.common.items.ItemMaybe;
 
 @Mod.EventBusSubscriber(modid=BRInfo.ID)
 public class BRStuff{
@@ -26,16 +24,10 @@ public class BRStuff{
 	public static Block bedrockBreaker;
 	public static Block debugGen;
 	
-	public static BRItemBase devItem;
-	public static ItemMaybe linker;
-	
 	public static final void initStuff(){
 		// Blocks
 		bedrockBreaker=new BlockBedrockBreaker();
 		debugGen=new BlockDebugGenerator();
-		
-		// Items
-		linker=new ItemMaybe();
 	}
 	
 	@SubscribeEvent

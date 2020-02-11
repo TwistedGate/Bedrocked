@@ -1,7 +1,7 @@
 [{
 	"name": "Bedrocked",
 	"modid": "bedrocked",
-	"description": "A simple machine able to break the hardest material known to mankind.",
+	"description": "A simple machine able to break the hardest material known to mankind with the power of electricity.",
 	"version": "${version}",
 	"mcversion": "${mcversion}",
 	"url": "https://github.com/TwistedGate/Bedrocked",
