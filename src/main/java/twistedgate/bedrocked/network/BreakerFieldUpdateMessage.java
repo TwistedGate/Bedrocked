@@ -11,36 +11,28 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import twistedgate.bedrocked.common.tileentity.TEBedrockBreaker;
 
-public class BreakerFieldUpdateMessage implements IMessage{
-	public BreakerFieldUpdateMessage(){}
+public class BreakerFieldUpdateMessage extends BaseMessage{
+	public BreakerFieldUpdateMessage(){super(null);}
 	
-	private BlockPos pos;
 	private byte fieldId;
 	private byte fieldValue;
 	public BreakerFieldUpdateMessage(BlockPos pos, int id, int value){
-		this.pos=pos;
+		super(pos);
 		this.fieldId=(byte)(id&0xFF);
 		this.fieldValue=(byte)(value&0xFF);
 	}
 	
 	@Override
 	public void toBytes(ByteBuf buf){
-		buf.writeInt(this.pos.getX());
-		buf.writeInt(this.pos.getY());
-		buf.writeInt(this.pos.getZ());
+		super.toBytes(buf);
 		
-		// Deflate into a 24-Bit int
 		buf.writeBytes(new byte[]{this.fieldId, this.fieldValue});
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
-		int x=buf.readInt();
-		int y=buf.readInt();
-		int z=buf.readInt();
-		this.pos=new BlockPos(x,y,z);
+		super.fromBytes(buf);
 		
-		// Inflate from the 24-Bit int
 		this.fieldId	=buf.readByte();
 		this.fieldValue	=buf.readByte();
 	}

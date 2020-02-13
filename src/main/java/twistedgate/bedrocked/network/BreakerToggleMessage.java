@@ -9,17 +9,17 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import twistedgate.bedrocked.common.tileentity.TEBedrockBreaker;
 
-public class BreakerResetMessage extends BaseMessage{
+public class BreakerToggleMessage extends BaseMessage{
 	
-	public BreakerResetMessage(){super(null);}
-	
-	public BreakerResetMessage(TEBedrockBreaker tileEntity){
+	public BreakerToggleMessage(){super(null);}
+
+	public BreakerToggleMessage(TEBedrockBreaker tileEntity){
 		super(tileEntity.getPos());
 	}
 	
-	public static class Handler implements IMessageHandler<BreakerResetMessage, IMessage>{
+	public static class Handler implements IMessageHandler<BreakerToggleMessage, IMessage>{
 		@Override
-		public IMessage onMessage(BreakerResetMessage message, MessageContext ctx){
+		public IMessage onMessage(BreakerToggleMessage message, MessageContext ctx){
 			if(ctx.side==Side.SERVER){
 				WorldServer world=ctx.getServerHandler().player.getServerWorld();
 				BlockPos pos=message.pos;
@@ -27,7 +27,7 @@ public class BreakerResetMessage extends BaseMessage{
 				if(world.isBlockLoaded(pos)){
 					TileEntity te=world.getTileEntity(pos);
 					if(te instanceof TEBedrockBreaker){
-						((TEBedrockBreaker)te).softReset();
+						((TEBedrockBreaker)te).toggle();
 					}
 				}
 			}
