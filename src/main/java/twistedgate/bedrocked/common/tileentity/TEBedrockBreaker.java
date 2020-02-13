@@ -29,16 +29,23 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 	public int radius=8;
 	public int hits=0;
 	
-	/** Location of the Block that is currently going to be broken. */
-	public BlockPos workingPos=null;
+	/** If the machine is turned on/off. True = ON, False = OFF */
+	public boolean enabled=true;
 	
 	/** If no bedrock was found the machine considers the area cleared and won't check for more. */
 	public boolean noBedrock=false;
 	
+	/** Location of the Block that is currently going to be broken. */
+	public BlockPos workingPos=null;
+	
+	private boolean canRun=false;
 	public TEBedrockBreaker(){
 		super(new CEnergyStorage(REQUIRED_HITS*REQUIRED_MIN_ENERGY));
 	}
 	
+	/**
+	 * Set's some critical variables back to default
+	 */
 	public void softReset(){
 		this.noBedrock=false;
 		this.workingPos=null;
@@ -46,14 +53,14 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		markDirty();
 	}
 	
+	public void toggle(){
+		this.enabled=!this.enabled;
+		markDirty();
+	}
+	
 	@Override
 	public void update(){
-		if(this.world.isRemote) return;
-		
-		// Avoids unessesarly wasting processing time, after no bedrock has been detected.
-		// Downside is one has to re-place the machine if there was a bedrock block placed in the area.
-		// Or press the Soft-Reset Button.
-		if(this.noBedrock) return;
+		if(this.world.isRemote || this.noBedrock || !this.enabled) return;
 		
 		for(EnumFacing side:EnumFacing.values()){
 			if(this.world.getBlockState(this.pos.offset(side)).getWeakPower(this.world, this.pos, side)!=0){
@@ -66,7 +73,6 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		}
 		
 		boolean dirty=false;
-		
 		if(this.workingPos==null){
 			BlockPos tmp;
 			if((tmp=findBedrock(this.radius, this.minHeight, this.maxHeight))==null){
@@ -107,7 +113,10 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 				}
 			}
 			
-			BlockBedrockBreaker.updateState(this.world, this.pos, canRun);
+			if(this.canRun!=canRun){
+				this.canRun=canRun;
+				BlockBedrockBreaker.updateState(this.world, this.pos, canRun);
+			}
 		}
 		
 		if(dirty){
@@ -264,6 +273,7 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 			case 4: return this.energyStorage.getMaxEnergyStored();
 			case 5: return this.hits;
 			case 6: return this.noBedrock?1:0;
+			case 7: return this.enabled?1:0;
 			default: return 0;
 		}
 	}
@@ -285,13 +295,14 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 			case 2: this.maxHeight=value; break;
 			// 3 & 4 not nessesary.
 			case 5: this.hits=value; break;
-			case 6: this.noBedrock=value>0?true:false; break;
+			case 6: this.noBedrock=value!=0; break;
+			case 7: this.enabled=value!=0; break;
 		}
 	}
 	
 	@Override
 	public int getFieldCount(){
-		return 7;
+		return 8;
 	}
 	
 	@Override

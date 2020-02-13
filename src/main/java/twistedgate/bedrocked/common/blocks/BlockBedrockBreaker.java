@@ -112,6 +112,7 @@ public class BlockBedrockBreaker extends BRBlockBase implements ITileEntityProvi
 				te.radius=tag.getInteger("radius");
 				te.minHeight=tag.getInteger("minheight");
 				te.maxHeight=tag.getInteger("maxheight");
+				te.enabled=tag.getBoolean("enabled");
 				te.getStorage().readFromNBT(tag);
 				te.markDirty();
 			}
@@ -145,6 +146,7 @@ public class BlockBedrockBreaker extends BRBlockBase implements ITileEntityProvi
 			tag.setInteger("radius", breaker.radius);
 			tag.setInteger("minheight", breaker.minHeight);
 			tag.setInteger("maxheight", breaker.maxHeight);
+			tag.setBoolean("enabled", breaker.enabled);
 			breaker.getStorage().writeToNBT(tag);
 			
 			main.setTag("machine", tag);
@@ -166,11 +168,12 @@ public class BlockBedrockBreaker extends BRBlockBase implements ITileEntityProvi
 		if(state.getValue(ACTIVE)!=active){ // Only update if this condition is met.
 			TileEntity te=world.getTileEntity(pos);
 
-			world.setBlockState(pos, state.withProperty(ACTIVE, active));
+			world.setBlockState(pos, state.withProperty(ACTIVE, active), 3);
 			
 			if(te!=null){
 				te.validate();
 				world.setTileEntity(pos, te);
+				Bedrocked.log.info("Restored TileEntity.");
 			}
 		}
 	}
@@ -195,7 +198,7 @@ public class BlockBedrockBreaker extends BRBlockBase implements ITileEntityProvi
 		
 		@Override
 		public String getHighlightTip(ItemStack item, String displayName) {
-			return displayName;
+			return "§b"+displayName;
 		};
 		
 		@SideOnly(Side.CLIENT)

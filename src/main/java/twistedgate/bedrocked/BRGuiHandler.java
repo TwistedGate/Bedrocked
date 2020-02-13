@@ -23,9 +23,6 @@ public class BRGuiHandler implements IGuiHandler{
 	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z){
 		switch(ID){
 			case 0:{
-				if(!world.isRemote)
-					return getServerGuiElement(ID, player, world, x, y, z);
-				
 				return new GuiBedrockBreaker(player.inventory, (TEBedrockBreaker)world.getTileEntity(new BlockPos(x,y,z)));
 			}
 		}

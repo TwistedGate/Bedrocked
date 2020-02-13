@@ -5,7 +5,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
 
 public class ContainerBedrockBreaker extends Container{
 	
@@ -20,18 +19,10 @@ public class ContainerBedrockBreaker extends Container{
 	
 	private int hits=0;
 	private boolean noBedrock=false;
+	private boolean enabled=true;
 	
 	public ContainerBedrockBreaker(InventoryPlayer playerInv, IInventory breakerInv){
 		this.breakerInv=breakerInv;
-		
-		for(int i=0;i<3;i++){
-			for(int j=0;j<9;j++){
-				addSlotToContainer(new Slot(playerInv, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
-			}
-		}
-		for(int k=0;k<9;k++){
-			addSlotToContainer(new Slot(playerInv, k, 8 + k * 18, 142));
-		}
 	}
 	
 	@Override
@@ -42,8 +33,6 @@ public class ContainerBedrockBreaker extends Container{
 	
 	@Override
 	public void detectAndSendChanges(){
-		//super.detectAndSendChanges(); // No slots in this.
-		
 		this.listeners.forEach(listener->{
 			if(this.radius!=this.breakerInv.getField(0)){
 				listener.sendWindowProperty(this, 0, this.breakerInv.getField(0));
@@ -63,8 +52,11 @@ public class ContainerBedrockBreaker extends Container{
 			if(this.hits!=this.breakerInv.getField(5)){
 				listener.sendWindowProperty(this, 5, this.breakerInv.getField(5));
 			}
-			if(this.noBedrock!=(this.breakerInv.getField(6)>0?true:false)){
+			if(this.noBedrock!=(this.breakerInv.getField(6)==0?false:true)){
 				listener.sendWindowProperty(this, 6, this.breakerInv.getField(6));
+			}
+			if(this.enabled!=(this.breakerInv.getField(7)==0?false:true)){
+				listener.sendWindowProperty(this, 7, this.breakerInv.getField(7));
 			}
 		});
 		
@@ -74,7 +66,8 @@ public class ContainerBedrockBreaker extends Container{
 		this.power=this.breakerInv.getField(3);
 		this.capacity=this.breakerInv.getField(4);
 		this.hits=this.breakerInv.getField(5);
-		this.noBedrock=this.breakerInv.getField(6)>0?true:false;
+		this.noBedrock=this.breakerInv.getField(6)==0?false:true;
+		this.enabled=this.breakerInv.getField(7)==0?false:true;
 	}
 	
 	@Override
