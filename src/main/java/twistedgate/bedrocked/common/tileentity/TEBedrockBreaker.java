@@ -193,6 +193,7 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		compound.setShort("radius", (short)this.radius);
 		compound.setShort("hits", (short)this.hits);
 		compound.setBoolean("areadone", this.noBedrock);
+		compound.setBoolean("enabled", this.enabled);
 		if(this.workingPos!=null){
 			NBTTagCompound coords=new NBTTagCompound();
 			coords.setInteger("x", this.workingPos.getX());
@@ -211,6 +212,7 @@ public class TEBedrockBreaker extends TEMachineBase implements ITickable, ISided
 		this.radius=compound.getShort("radius");
 		this.hits=compound.getShort("hits");
 		this.noBedrock=compound.getBoolean("areadone");
+		this.enabled=compound.getBoolean("enabled");
 		
 		if(compound.hasKey("breaking", NBT.TAG_COMPOUND)){
 			NBTTagCompound coords=(NBTTagCompound) compound.getTag("breaking");

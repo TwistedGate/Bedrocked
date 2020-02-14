@@ -173,7 +173,6 @@ public class BlockBedrockBreaker extends BRBlockBase implements ITileEntityProvi
 			if(te!=null){
 				te.validate();
 				world.setTileEntity(pos, te);
-				Bedrocked.log.info("Restored TileEntity.");
 			}
 		}
 	}
